@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Advert, Campaign } from '../../types/database';
+import { generateAdvertIdea } from '../../lib/ai';
 
 interface AdvertFormProps {
   advert: Advert | null;
@@ -22,6 +23,7 @@ export function AdvertForm({ advert, campaigns, onClose, onSave }: AdvertFormPro
     due_date: '',
   });
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -68,6 +70,40 @@ export function AdvertForm({ advert, campaigns, onClose, onSave }: AdvertFormPro
     }
   };
 
+  const handleAiSuggest = async () => {
+    try {
+      setError('');
+      setAiLoading(true);
+
+      if (!formData.campaign_id) {
+        setError('AI önerisi için önce bir kampanya seçmelisin.');
+        setAiLoading(false);
+        return;
+      }
+
+      const campaign = campaigns.find(c => c.id === formData.campaign_id);
+
+      const idea = await generateAdvertIdea({
+        campaignName: campaign?.name || 'Bilinmeyen Kampanya',
+        clientName: undefined,
+        campaignDescription: campaign?.description,
+        format: formData.format,
+        language: 'tr',
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        title: idea.title,
+        description: idea.description,
+      }));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'AI reklam önerisi alınırken bir hata oluştu.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex justify-between items-center mb-6">
@@ -106,13 +142,23 @@ export function AdvertForm({ advert, campaigns, onClose, onSave }: AdvertFormPro
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Title *
           </label>
-          <input
-            type="text"
-            required
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleAiSuggest}
+              disabled={aiLoading || !formData.campaign_id}
+              className="whitespace-nowrap px-3 py-2 rounded-lg border border-blue-600 text-blue-600 text-xs font-medium hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {aiLoading ? 'AI üretiyor...' : "AI'den öner"}
+            </button>
+          </div>
         </div>
 
         <div>
