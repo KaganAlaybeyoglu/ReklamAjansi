@@ -1,8 +1,8 @@
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AuthForm } from './components/Auth/AuthForm';
-import { Dashboard } from './components/Dashboard/Dashboard';
+import { useAuth } from "./contexts/AuthContext";
+import { AuthForm } from "./components/Auth/AuthForm";
+import { Dashboard } from "./components/Dashboard/Dashboard";
 
-function AppContent() {
+function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -14,14 +14,6 @@ function AppContent() {
   }
 
   return user ? <Dashboard /> : <AuthForm />;
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
 }
 
 export default App;

@@ -1,4 +1,5 @@
-import { Users, Briefcase, TrendingUp, FileText, Settings, LogOut, Award } from 'lucide-react';
+import { Users, Briefcase, TrendingUp, FileText, LogOut, Award } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -7,6 +8,18 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab, onSignOut }: SidebarProps) {
+  const { user } = useAuth();
+
+  const first = (user?.user_metadata?.first_name ?? '').trim();
+  const last = (user?.user_metadata?.last_name ?? '').trim();
+  const fullName = `${first} ${last}`.trim();
+
+  // İsim yoksa mailin sol tarafını göster (fallback)
+  const fallbackName =
+    (user?.email ? user.email.split('@')[0] : '').trim();
+
+  const displayName = fullName || fallbackName;
+
   const menuItems = [
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'campaigns', label: 'Campaigns', icon: TrendingUp },
@@ -20,6 +33,12 @@ export function Sidebar({ activeTab, setActiveTab, onSignOut }: SidebarProps) {
       <div className="p-6 border-b border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900">Agency Manager</h1>
         <p className="text-sm text-slate-600 mt-1">Creative Solutions</p>
+
+        {displayName && (
+          <p className="text-sm text-slate-700 mt-3">
+            Welcome, <span className="font-semibold">{displayName}</span>
+          </p>
+        )}
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
